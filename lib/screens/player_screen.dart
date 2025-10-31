@@ -76,16 +76,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
     // Trigger animation overlay
     final animationState = _animationKey.currentState;
     animationState?.addAnimation(emoji);
-
-    // Show a brief snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Sent $emoji'),
-        duration: const Duration(milliseconds: 800),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-      ),
-    );
   }
 
   @override
@@ -98,73 +88,64 @@ class _PlayerScreenState extends State<PlayerScreen> {
       body: SafeArea(
         top: false,
         bottom: false,
-        child: OrientationBuilder(
-          builder: (context, orientation) {
-            // Fullscreen mode - only show video player
-            if (_isFullscreen) {
-              return Stack(
-                children: [
-                  VideoPlayerWidget(
+        child: Stack(
+          children: [
+            OrientationBuilder(
+              builder: (context, orientation) {
+                // Fullscreen mode - only show video player
+                if (_isFullscreen) {
+                  return VideoPlayerWidget(
                     title: widget.post.title ?? widget.post.name,
-                  ),
-                  AnimationOverlay(key: _animationKey),
-                ],
-              );
-            }
+                  );
+                }
 
-            // Desktop/Tablet Landscape Layout
-            if (isTabletOrDesktop && isLandscape) {
-              return Row(
-                children: [
-                  // Left side - Video player with reactions
-                  Expanded(
-                    flex: 7,
-                    child: Column(
-                      children: [
-                        // Video player
-                        Expanded(
-                          child: Stack(
-                            children: [
-                              VideoPlayerWidget(
+                // Desktop/Tablet Landscape Layout
+                if (isTabletOrDesktop && isLandscape) {
+                  return Row(
+                    children: [
+                      // Left side - Video player with reactions
+                      Expanded(
+                        flex: 7,
+                        child: Column(
+                          children: [
+                            // Video player
+                            Expanded(
+                              child: VideoPlayerWidget(
                                 title: widget.post.title ?? widget.post.name,
                               ),
-                              AnimationOverlay(key: _animationKey),
-                            ],
-                          ),
+                            ),
+                            // Reaction buttons
+                            ReactionButtons(onReactionTap: _handleReaction),
+                          ],
                         ),
-                        // Reaction buttons
-                        ReactionButtons(onReactionTap: _handleReaction),
-                      ],
-                    ),
-                  ),
-                  // Right side - Chat
-                  SizedBox(width: 400, child: LiveChatWidget()),
-                ],
-              );
-            }
+                      ),
+                      // Right side - Chat
+                      SizedBox(width: 400, child: LiveChatWidget()),
+                    ],
+                  );
+                }
 
-            // Mobile Portrait Layout
-            return Column(
-              children: [
-                // Video player
-                AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: Stack(
-                    children: [
-                      VideoPlayerWidget(
+                // Mobile Portrait Layout
+                return Column(
+                  children: [
+                    // Video player
+                    AspectRatio(
+                      aspectRatio: 16 / 9,
+                      child: VideoPlayerWidget(
                         title: widget.post.title ?? widget.post.name,
                       ),
-                      AnimationOverlay(key: _animationKey),
-                    ],
-                  ),
-                ),
-                // Reaction buttons
-                ReactionButtons(onReactionTap: _handleReaction),
-                // Chat
-                const Expanded(child: LiveChatWidget()),
-              ],
-            );
-          },
+                    ),
+                    // Reaction buttons
+                    ReactionButtons(onReactionTap: _handleReaction),
+                    // Chat
+                    const Expanded(child: LiveChatWidget()),
+                  ],
+                );
+              },
+            ),
+            // Animation overlay on top of everything
+            IgnorePointer(child: AnimationOverlay(key: _animationKey)),
+          ],
         ),
       ),
     );

@@ -13,10 +13,3 @@ class ChatMessage {
     this.userColor,
   });
 }
-
-class Reaction {
-  final String emoji;
-  final String label;
-
-  Reaction({required this.emoji, required this.label});
-}
