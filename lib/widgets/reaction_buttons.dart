@@ -97,16 +97,9 @@ class ReactionButtons extends StatelessWidget {
         .toList();
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          top: BorderSide(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-            width: 1,
-          ),
-        ),
-      ),
+      height: 64,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [

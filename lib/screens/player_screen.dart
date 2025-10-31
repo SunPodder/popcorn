@@ -5,6 +5,7 @@ import '../widgets/video_player_widget.dart';
 import '../widgets/reaction_buttons.dart';
 import '../widgets/live_chat_widget.dart';
 import '../widgets/animation_overlay.dart';
+import '../widgets/episode_selector.dart';
 
 class PlayerScreen extends StatefulWidget {
   final Post post;
@@ -19,6 +20,81 @@ class _PlayerScreenState extends State<PlayerScreen> {
   final GlobalKey<AnimationOverlayState> _animationKey = GlobalKey();
   bool _isFullscreen = false;
   bool _orientationInitialized = false;
+  List<Season> _seasons = [];
+  int _currentSeasonIndex = 0;
+  int _currentEpisodeIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMockSeasons();
+  }
+
+  void _loadMockSeasons() {
+    // Mock data - simulating a series with 2 seasons
+    _seasons = [
+      Season(
+        seasonNumber: 1,
+        episodes: [
+          Episode(
+            episodeNumber: 1,
+            title: 'Pilot',
+            thumbnail: '',
+            duration: const Duration(minutes: 45),
+          ),
+          Episode(
+            episodeNumber: 2,
+            title: 'The Beginning',
+            thumbnail: '',
+            duration: const Duration(minutes: 42),
+          ),
+          Episode(
+            episodeNumber: 3,
+            title: 'Rising Tensions',
+            thumbnail: '',
+            duration: const Duration(minutes: 43),
+          ),
+          Episode(
+            episodeNumber: 4,
+            title: 'Revelations',
+            thumbnail: '',
+            duration: const Duration(minutes: 44),
+          ),
+        ],
+      ),
+      Season(
+        seasonNumber: 2,
+        episodes: [
+          Episode(
+            episodeNumber: 1,
+            title: 'New Dawn',
+            thumbnail: '',
+            duration: const Duration(minutes: 46),
+          ),
+          Episode(
+            episodeNumber: 2,
+            title: 'Dark Secrets',
+            thumbnail: '',
+            duration: const Duration(minutes: 43),
+          ),
+          Episode(
+            episodeNumber: 3,
+            title: 'The Betrayal',
+            thumbnail: '',
+            duration: const Duration(minutes: 45),
+          ),
+        ],
+      ),
+    ];
+  }
+
+  void _onEpisodeSelected(int seasonIndex, int episodeIndex) {
+    setState(() {
+      _currentSeasonIndex = seasonIndex;
+      _currentEpisodeIndex = episodeIndex;
+    });
+    // TODO: Load and play the selected episode
+  }
 
   @override
   void didChangeDependencies() {
@@ -119,8 +195,50 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           ],
                         ),
                       ),
-                      // Right side - Chat
-                      SizedBox(width: 400, child: LiveChatWidget()),
+                      // Right side - Chat and Episodes in tabs
+                      SizedBox(
+                        width: 400,
+                        child: DefaultTabController(
+                          length: 2,
+                          child: Column(
+                            children: [
+                              TabBar(
+                                indicatorColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
+                                labelColor:
+                                    Theme.of(context).colorScheme.primary,
+                                unselectedLabelColor: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.color,
+                                tabs: const [
+                                  Tab(
+                                    icon: Icon(Icons.chat_bubble_outline),
+                                    text: 'Chat',
+                                  ),
+                                  Tab(
+                                    icon: Icon(Icons.video_library),
+                                    text: 'Episodes',
+                                  ),
+                                ],
+                              ),
+                              Expanded(
+                                child: TabBarView(
+                                  children: [
+                                    const LiveChatWidget(),
+                                    EpisodeSelector(
+                                      seasons: _seasons,
+                                      currentSeasonIndex: _currentSeasonIndex,
+                                      currentEpisodeIndex: _currentEpisodeIndex,
+                                      onEpisodeSelected: _onEpisodeSelected,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   );
                 }
@@ -137,8 +255,48 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     ),
                     // Reaction buttons
                     ReactionButtons(onReactionTap: _handleReaction),
-                    // Chat
-                    const Expanded(child: LiveChatWidget()),
+                    // Chat and Episodes in tabs
+                    Expanded(
+                      child: DefaultTabController(
+                        length: 2,
+                        child: Column(
+                          children: [
+                            TabBar(
+                              indicatorColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
+                              labelColor: Theme.of(context).colorScheme.primary,
+                              unselectedLabelColor: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.color,
+                              tabs: const [
+                                Tab(
+                                  icon: Icon(Icons.chat_bubble_outline),
+                                  text: 'Chat',
+                                ),
+                                Tab(
+                                  icon: Icon(Icons.video_library),
+                                  text: 'Episodes',
+                                ),
+                              ],
+                            ),
+                            Expanded(
+                              child: TabBarView(
+                                children: [
+                                  const LiveChatWidget(),
+                                  EpisodeSelector(
+                                    seasons: _seasons,
+                                    currentSeasonIndex: _currentSeasonIndex,
+                                    currentEpisodeIndex: _currentEpisodeIndex,
+                                    onEpisodeSelected: _onEpisodeSelected,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 );
               },

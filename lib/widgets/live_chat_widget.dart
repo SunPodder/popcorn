@@ -119,29 +119,13 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        border: Border(
-          left: BorderSide(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-            width: 1,
-          ),
-        ),
-      ),
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: Column(
         children: [
           // Chat header
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(
-                bottom: BorderSide(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-            ),
+            color: Theme.of(context).colorScheme.surface,
             child: Row(
               children: [
                 Icon(
@@ -264,16 +248,9 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
 
           // Message input
           Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(
-                top: BorderSide(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-            ),
+            height: 64,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Theme.of(context).colorScheme.surface,
             child: Row(
               children: [
                 Expanded(
