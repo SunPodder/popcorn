@@ -1,0 +1,41 @@
+// API endpoint to fetch home page posts data
+// API_URL: /home-page/getHomePagePosts
+{
+	"categoryPosts": [
+		{
+			"id": 6,
+			"name": "English Movies",
+			"type": "main",
+			"parentId": null,
+			"userId": 1,
+			"createdAt": "2022-10-10T10:47:38.586Z",
+			"updatedAt": "2022-10-10T10:47:38.586Z",
+			"posts": [
+				{
+					"id": 104297,
+					"name": "Dead of Winter",
+					"image": "91877bd4-9373-4c05-9bc3-8e0441325e35.jpeg",
+					"imageSm": "52c5d447-3a53-4d0e-9ddc-a03688c6cffa.jpeg",
+					"quality": "1080p WEBRip English",
+					"watchTime": "1h 38m",
+					"year": "2025",
+					"type": "singleVideo"
+				}
+			]
+		}
+	],
+	"mostVisitedPosts": [
+		{
+			"id": 96534,
+			"title": "Gen V (TV Series 2023-) [Dual Audio] [Hin+Eng]",
+			"name": "Gen V",
+			"image": "1bfcc5cf-7807-4c6e-9f67-7180eabca2d5.jpeg",
+			"imageSm": "fa9eff2a-e2bf-4a18-b96a-2831ca98ff19.jpeg",
+			"quality": "1080p TV Series Dub",
+			"watchTime": "",
+			"year": "2023",
+			"type": "series",
+			"view": 16266
+		}
+	]
+}

@@ -1,0 +1,69 @@
+// API endpoint to fetch post data by ID
+// API_URL: /posts/:id
+{
+	"id": 93639,
+	"title": "Farzi (TV Series 2023-)",
+	"type": "series",
+	"image": "69c4039a-28af-482c-9345-f4dc3fe60f1a.jpeg",
+	"imageSm": "fb6783f3-e260-4888-b5db-f5f370cd140e.jpeg",
+	"cover": "6badc3c2-d158-4e69-8ca4-00df42d5d935.jpeg",
+	"metaData": "An artist who gets pulled into the murky high stakes of a con job and a fiery task force officer on the mission to rid the country of his menaces in a fast-paced, edgy one-of-a-kind thriller.",
+	"tags": "Farzi,Ferzi,Farzi 2023,Farzi,Farzi,Farzi,",
+	"content": [
+		{
+			"episodes": [
+				{
+					"link": "http://ftp8.circleftp.net/FILE/Hindi%20TV%20Series/Farzi%20%28TV%20Series%202023-%29/Season%201%201080p/Fakes.Farzi.S01E01.Artist.1080p.AMZN.WEB-DL.DDP5.1.H.264-mkvCinemas.mkv",
+					"title": "Farzi S01E01"
+				},
+				{
+					"link": "http://ftp8.circleftp.net/FILE/Hindi%20TV%20Series/Farzi%20%28TV%20Series%202023-%29/Season%201%201080p/Fakes.Farzi.S01E02.Social.Service.1080p.AMZN.WEB-DL.DDP5.1.H.264-mkvCinemas.mkv",
+					"title": "Farzi S01E02"
+				},
+				{
+					"link": "http://ftp8.circleftp.net/FILE/Hindi%20TV%20Series/Farzi%20%28TV%20Series%202023-%29/Season%201%201080p/Fakes.Farzi.S01E03.CCFART.1080p.AMZN.WEB-DL.DDP5.1.H.264-mkvCinemas.mkv",
+					"title": "Farzi S01E03"
+				},
+				{
+					"link": "http://ftp8.circleftp.net/FILE/Hindi%20TV%20Series/Farzi%20%28TV%20Series%202023-%29/Season%201%201080p/Fakes.Farzi.S01E04.Dhanrakshak.1080p.AMZN.WEB-DL.DDP5.1.H.264-mkvCinemas.mkv",
+					"title": "Farzi S01E04"
+				},
+				{
+					"link": "http://ftp8.circleftp.net/FILE/Hindi%20TV%20Series/Farzi%20%28TV%20Series%202023-%29/Season%201%201080p/Fakes.Farzi.S01E05.Second.Oldest.Profession.1080p.AMZN.WEB-DL.DDP5.1.H.264-mkvCinemas.mkv",
+					"title": "Farzi S01E05"
+				},
+				{
+					"link": "http://ftp8.circleftp.net/FILE/Hindi%20TV%20Series/Farzi%20%28TV%20Series%202023-%29/Season%201%201080p/Fakes.Farzi.S01E06.Cat.and.Mouse.1080p.AMZN.WEB-DL.DDP5.1.H.264-mkvCinemas.mkv",
+					"title": "Farzi S01E06"
+				},
+				{
+					"link": "http://ftp8.circleftp.net/FILE/Hindi%20TV%20Series/Farzi%20%28TV%20Series%202023-%29/Season%201%201080p/Fakes.Farzi.S01E07.Supernote.1080p.AMZN.WEB-DL.DDP5.1.H.264-mkvCinemas.mkv",
+					"title": "Farzi S01E07"
+				},
+				{
+					"link": "http://ftp8.circleftp.net/FILE/Hindi%20TV%20Series/Farzi%20%28TV%20Series%202023-%29/Season%201%201080p/Fakes.Farzi.S01E08.Crash.and.Burn.1080p.AMZN.WEB-DL.DDP5.1.H.264-mkvCinemas.mkv",
+					"title": "Farzi S01E08"
+				}
+			],
+			"seasonName": "Season 1"
+		}
+	],
+	"view": 14767,
+	"name": "Farzi",
+	"quality": "1080p TV Series Hindi",
+	"watchTime": "",
+	"year": "2023",
+	"userId": 2,
+	"createdAt": "2023-03-15T09:25:16.516Z",
+	"updatedAt": "2023-03-15T09:25:16.516Z",
+	"createdBy": { "id": 2, "name": "Monir Khan" },
+	"categories": [
+		{
+			"parentId": null,
+			"id": 5,
+			"name": "Hindi TV Serials",
+			"type": "main"
+		},
+		{ "parentId": null, "id": 80, "name": "Featured Post", "type": "main" }
+	]
+}
