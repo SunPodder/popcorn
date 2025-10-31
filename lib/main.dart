@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:media_kit/media_kit.dart';
 import 'theme/popcorn_theme.dart';
 import 'screens/splash_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  MediaKit.ensureInitialized();
   runApp(const PopcornApp());
 }
 

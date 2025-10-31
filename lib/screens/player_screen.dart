@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
 import '../models/post.dart';
-import '../widgets/video_player_widget.dart';
+import '../models/post_detail.dart';
+import '../widgets/advanced_video_player.dart';
 import '../widgets/reaction_buttons.dart';
 import '../widgets/live_chat_widget.dart';
 import '../widgets/animation_overlay.dart';
 import '../widgets/episode_selector.dart';
+import '../services/api_service.dart';
 
 class PlayerScreen extends StatefulWidget {
   final Post post;
@@ -18,82 +22,99 @@ class PlayerScreen extends StatefulWidget {
 
 class _PlayerScreenState extends State<PlayerScreen> {
   final GlobalKey<AnimationOverlayState> _animationKey = GlobalKey();
+  final ApiService _apiService = ApiService();
   bool _isFullscreen = false;
   bool _orientationInitialized = false;
   List<Season> _seasons = [];
   int _currentSeasonIndex = 0;
   int _currentEpisodeIndex = 0;
+  PostDetail? _postDetail;
+  bool _isLoading = true;
+  String? _error;
+  String? _currentVideoUrl;
+  Player? _sharedPlayer;
+  VideoController? _sharedVideoController;
 
   @override
   void initState() {
     super.initState();
-    _loadMockSeasons();
+    _sharedPlayer = Player();
+    _sharedVideoController = VideoController(_sharedPlayer!);
+    _loadPostDetails();
   }
 
-  void _loadMockSeasons() {
-    // Mock data - simulating a series with 2 seasons
-    _seasons = [
-      Season(
-        seasonNumber: 1,
-        episodes: [
-          Episode(
-            episodeNumber: 1,
-            title: 'Pilot',
-            thumbnail: '',
-            duration: const Duration(minutes: 45),
-          ),
-          Episode(
-            episodeNumber: 2,
-            title: 'The Beginning',
-            thumbnail: '',
-            duration: const Duration(minutes: 42),
-          ),
-          Episode(
-            episodeNumber: 3,
-            title: 'Rising Tensions',
-            thumbnail: '',
-            duration: const Duration(minutes: 43),
-          ),
-          Episode(
-            episodeNumber: 4,
-            title: 'Revelations',
-            thumbnail: '',
-            duration: const Duration(minutes: 44),
-          ),
-        ],
-      ),
-      Season(
-        seasonNumber: 2,
-        episodes: [
-          Episode(
-            episodeNumber: 1,
-            title: 'New Dawn',
-            thumbnail: '',
-            duration: const Duration(minutes: 46),
-          ),
-          Episode(
-            episodeNumber: 2,
-            title: 'Dark Secrets',
-            thumbnail: '',
-            duration: const Duration(minutes: 43),
-          ),
-          Episode(
-            episodeNumber: 3,
-            title: 'The Betrayal',
-            thumbnail: '',
-            duration: const Duration(minutes: 45),
-          ),
-        ],
-      ),
-    ];
+  Future<void> _loadPostDetails() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+
+      final postDetail = await _apiService.getPostDetail(widget.post.id);
+
+      setState(() {
+        _postDetail = postDetail;
+        _isLoading = false;
+      });
+
+      // Process content and load seasons/episodes
+      _processContent();
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _error = 'Failed to load content: $e';
+      });
+    }
+  }
+
+  void _processContent() {
+    if (_postDetail == null) return;
+
+    if (_postDetail!.isMovie) {
+      // Single movie stream
+      _currentVideoUrl = _postDetail!.movieStreamUrl;
+      _seasons = [];
+    } else if (_postDetail!.isSeries) {
+      // Series with seasons and episodes
+      final seasonContents = _postDetail!.seasons;
+      _seasons = seasonContents.map((seasonContent) {
+        return Season(
+          seasonNumber: seasonContent.seasonNumber,
+          episodes: seasonContent.episodes.map((episodeContent) {
+            return Episode(
+              episodeNumber: episodeContent.episodeNumber,
+              title: episodeContent.title,
+              thumbnail: '',
+              duration:
+                  episodeContent.estimatedDuration ??
+                  const Duration(minutes: 45),
+            );
+          }).toList(),
+        );
+      }).toList();
+
+      // Load first episode URL
+      if (seasonContents.isNotEmpty && seasonContents[0].episodes.isNotEmpty) {
+        _currentVideoUrl = seasonContents[0].episodes[0].link;
+      }
+    }
+
+    setState(() {});
   }
 
   void _onEpisodeSelected(int seasonIndex, int episodeIndex) {
-    setState(() {
-      _currentSeasonIndex = seasonIndex;
-      _currentEpisodeIndex = episodeIndex;
-    });
-    // TODO: Load and play the selected episode
+    if (_postDetail == null || !_postDetail!.isSeries) return;
+
+    final seasonContents = _postDetail!.seasons;
+    if (seasonIndex < seasonContents.length &&
+        episodeIndex < seasonContents[seasonIndex].episodes.length) {
+      setState(() {
+        _currentSeasonIndex = seasonIndex;
+        _currentEpisodeIndex = episodeIndex;
+        _currentVideoUrl =
+            seasonContents[seasonIndex].episodes[episodeIndex].link;
+      });
+    }
   }
 
   @override
@@ -108,6 +129,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   @override
   void dispose() {
+    _sharedPlayer?.dispose();
     // Reset orientation when leaving
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -154,6 +176,62 @@ class _PlayerScreenState extends State<PlayerScreen> {
     animationState?.addAnimation(emoji);
   }
 
+  Widget _buildVideoPlayer() {
+    if (_isLoading) {
+      return Container(
+        color: Colors.black,
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_error != null) {
+      return Container(
+        color: Colors.black,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 48),
+              const SizedBox(height: 16),
+              Text(
+                _error!,
+                style: const TextStyle(color: Colors.white),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadPostDetails,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_currentVideoUrl == null) {
+      return Container(
+        color: Colors.black,
+        child: const Center(
+          child: Text(
+            'No video available',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    }
+
+    return AdvancedVideoPlayer(
+      key: ValueKey(_currentVideoUrl),
+      videoUrl: _currentVideoUrl!,
+      title: widget.post.title ?? widget.post.name,
+      onFullscreenToggle: _toggleFullscreen,
+      isFullscreen: false,
+      sharedPlayer: _sharedPlayer,
+      sharedVideoController: _sharedVideoController,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -170,8 +248,33 @@ class _PlayerScreenState extends State<PlayerScreen> {
               builder: (context, orientation) {
                 // Fullscreen mode - only show video player
                 if (_isFullscreen) {
-                  return VideoPlayerWidget(
+                  if (_isLoading) {
+                    return Container(
+                      color: Colors.black,
+                      child: const Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  if (_error != null || _currentVideoUrl == null) {
+                    return Container(
+                      color: Colors.black,
+                      child: Center(
+                        child: Text(
+                          _error ?? 'No video URL available',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    );
+                  }
+
+                  return AdvancedVideoPlayer(
+                    key: ValueKey(_currentVideoUrl),
+                    videoUrl: _currentVideoUrl!,
                     title: widget.post.title ?? widget.post.name,
+                    onFullscreenToggle: _toggleFullscreen,
+                    isFullscreen: true,
+                    sharedPlayer: _sharedPlayer,
+                    sharedVideoController: _sharedVideoController,
                   );
                 }
 
@@ -185,11 +288,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                         child: Column(
                           children: [
                             // Video player
-                            Expanded(
-                              child: VideoPlayerWidget(
-                                title: widget.post.title ?? widget.post.name,
-                              ),
-                            ),
+                            Expanded(child: _buildVideoPlayer()),
                             // Reaction buttons
                             ReactionButtons(onReactionTap: _handleReaction),
                           ],
@@ -206,8 +305,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                 indicatorColor: Theme.of(
                                   context,
                                 ).colorScheme.primary,
-                                labelColor:
-                                    Theme.of(context).colorScheme.primary,
+                                labelColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
                                 unselectedLabelColor: Theme.of(
                                   context,
                                 ).textTheme.bodyMedium?.color,
@@ -249,9 +349,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     // Video player
                     AspectRatio(
                       aspectRatio: 16 / 9,
-                      child: VideoPlayerWidget(
-                        title: widget.post.title ?? widget.post.name,
-                      ),
+                      child: _buildVideoPlayer(),
                     ),
                     // Reaction buttons
                     ReactionButtons(onReactionTap: _handleReaction),

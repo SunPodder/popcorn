@@ -110,7 +110,10 @@ final List<Reaction> emojiReactions = [
   Reaction(emoji: '😴', assetPath: 'assets/emojis/1f634.svg'),
   Reaction(emoji: '😵‍💫', assetPath: 'assets/emojis/1f635-200d-1f4ab.svg'),
   Reaction(emoji: '😵', assetPath: 'assets/emojis/1f635.svg'),
-  Reaction(emoji: '😶‍🌫️', assetPath: 'assets/emojis/1f636-200d-1f32b-fe0f.svg'),
+  Reaction(
+    emoji: '😶‍🌫️',
+    assetPath: 'assets/emojis/1f636-200d-1f32b-fe0f.svg',
+  ),
   Reaction(emoji: '😶', assetPath: 'assets/emojis/1f636.svg'),
   Reaction(emoji: '😷', assetPath: 'assets/emojis/1f637.svg'),
   Reaction(emoji: '🙁', assetPath: 'assets/emojis/1f641.svg'),
@@ -121,10 +124,22 @@ final List<Reaction> emojiReactions = [
   Reaction(emoji: '🙄', assetPath: 'assets/emojis/1f644.svg'),
   Reaction(emoji: '🙅‍♀️', assetPath: 'assets/emojis/1f645-200d-2640-fe0f.svg'),
   Reaction(emoji: '🙅‍♂️', assetPath: 'assets/emojis/1f645-200d-2642-fe0f.svg'),
-  Reaction(emoji: '🙆🏼‍♀️', assetPath: 'assets/emojis/1f646-1f3fc-200d-2640-fe0f.svg'),
-  Reaction(emoji: '🙆🏼‍♂️', assetPath: 'assets/emojis/1f646-1f3fc-200d-2642-fe0f.svg'),
-  Reaction(emoji: '🙋🏻‍♂️', assetPath: 'assets/emojis/1f64b-1f3fb-200d-2642-fe0f.svg'),
-  Reaction(emoji: '🙋🏼‍♀️', assetPath: 'assets/emojis/1f64b-1f3fc-200d-2640-fe0f.svg'),
+  Reaction(
+    emoji: '🙆🏼‍♀️',
+    assetPath: 'assets/emojis/1f646-1f3fc-200d-2640-fe0f.svg',
+  ),
+  Reaction(
+    emoji: '🙆🏼‍♂️',
+    assetPath: 'assets/emojis/1f646-1f3fc-200d-2642-fe0f.svg',
+  ),
+  Reaction(
+    emoji: '🙋🏻‍♂️',
+    assetPath: 'assets/emojis/1f64b-1f3fb-200d-2642-fe0f.svg',
+  ),
+  Reaction(
+    emoji: '🙋🏼‍♀️',
+    assetPath: 'assets/emojis/1f64b-1f3fc-200d-2640-fe0f.svg',
+  ),
   Reaction(emoji: '🙌', assetPath: 'assets/emojis/1f64c.svg'),
   Reaction(emoji: '🙏', assetPath: 'assets/emojis/1f64f.svg'),
   Reaction(emoji: '🚩', assetPath: 'assets/emojis/1f6a9.svg'),
@@ -138,8 +153,14 @@ final List<Reaction> emojiReactions = [
   Reaction(emoji: '🤟', assetPath: 'assets/emojis/1f91f.svg'),
   Reaction(emoji: '🤣', assetPath: 'assets/emojis/1f923.svg'),
   Reaction(emoji: '🤤', assetPath: 'assets/emojis/1f924.svg'),
-  Reaction(emoji: '🤦🏻‍♀️', assetPath: 'assets/emojis/1f926-1f3fb-200d-2640-fe0f.svg'),
-  Reaction(emoji: '🤦🏻‍♂️', assetPath: 'assets/emojis/1f926-1f3fb-200d-2642-fe0f.svg'),
+  Reaction(
+    emoji: '🤦🏻‍♀️',
+    assetPath: 'assets/emojis/1f926-1f3fb-200d-2640-fe0f.svg',
+  ),
+  Reaction(
+    emoji: '🤦🏻‍♂️',
+    assetPath: 'assets/emojis/1f926-1f3fb-200d-2642-fe0f.svg',
+  ),
   Reaction(emoji: '🤧', assetPath: 'assets/emojis/1f927.svg'),
   Reaction(emoji: '🤨', assetPath: 'assets/emojis/1f928.svg'),
   Reaction(emoji: '🤩', assetPath: 'assets/emojis/1f929.svg'),
@@ -163,7 +184,11 @@ final List<Reaction> emojiReactions = [
   Reaction(emoji: '🥶', assetPath: 'assets/emojis/1f976.svg'),
   Reaction(emoji: '🥹', assetPath: 'assets/emojis/1f979.svg'),
   Reaction(emoji: '🥺', assetPath: 'assets/emojis/1f97a.svg'),
-  Reaction(emoji: '🧑🏻‍❤️‍💋‍🧑🏼', assetPath: 'assets/emojis/1f9d1-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fc.svg'),
+  Reaction(
+    emoji: '🧑🏻‍❤️‍💋‍🧑🏼',
+    assetPath:
+        'assets/emojis/1f9d1-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fc.svg',
+  ),
   Reaction(emoji: '🩸', assetPath: 'assets/emojis/1fa78.svg'),
   Reaction(emoji: '🫠', assetPath: 'assets/emojis/1fae0.svg'),
   Reaction(emoji: '🫡', assetPath: 'assets/emojis/1fae1.svg'),
