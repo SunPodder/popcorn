@@ -19,8 +19,6 @@ void main() {
     ..writeln(
       '// Run `dart run tools/generate_emoji_list.dart` to regenerate.\n',
     )
-    ..writeln('import "package:flutter_svg/flutter_svg.dart";')
-    ..writeln('import "package:flutter/material.dart";\n')
     ..writeln('class Reaction {')
     ..writeln('  final String emoji;')
     ..writeln('  final String assetPath;')
