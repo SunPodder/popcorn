@@ -81,7 +81,7 @@ io.on("connection", (socket) => {
 	// Handle chat messages
 	socket.on("chat-message", ({ roomId, message }) => {
 		// Broadcast to all users in the room including sender
-		io.to(roomId).emit("chat-message", message);
+		socket.broadcast.to(roomId).emit("chat-message", message);
 	});
 
 	// Handle playback sync from host
