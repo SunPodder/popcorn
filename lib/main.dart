@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'theme/popcorn_theme.dart';
 import 'screens/splash_screen.dart';
+import 'services/user_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
+
+  // Initialize user service
+  await UserService().initialize();
+
   runApp(const PopcornApp());
 }
 

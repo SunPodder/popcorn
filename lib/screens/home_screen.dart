@@ -67,6 +67,8 @@ class _HomeScreenState extends State<HomeScreen> {
       // Add shuffled category posts
       linearFeed.addAll(categoryPosts);
 
+      linearFeed.retainWhere((post) => (post.quality != "null") && post.quality.isNotEmpty);
+
       setState(() {
         _homePosts = linearFeed;
         _allPosts = linearFeed;

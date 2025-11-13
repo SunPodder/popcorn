@@ -1,8 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/player_models.dart';
+import 'reaction_buttons.dart';
 
 class LiveChatWidget extends StatefulWidget {
-  const LiveChatWidget({super.key});
+  final Function(String emoji)? onReactionTap;
+  final List<ChatMessage> messages;
+  final String username;
+  final String roomId;
+  final Function(String message) onSendMessage;
+  final int userCount;
+
+  const LiveChatWidget({
+    super.key,
+    this.onReactionTap,
+    required this.messages,
+    required this.username,
+    required this.roomId,
+    required this.onSendMessage,
+    this.userCount = 0,
+  });
 
   @override
   State<LiveChatWidget> createState() => _LiveChatWidgetState();
@@ -11,12 +28,11 @@ class LiveChatWidget extends StatefulWidget {
 class _LiveChatWidgetState extends State<LiveChatWidget> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<ChatMessage> _messages = [];
 
   @override
   void initState() {
     super.initState();
-    _loadMockMessages();
+    _scrollToBottom();
   }
 
   @override
@@ -26,70 +42,15 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
     super.dispose();
   }
 
-  void _loadMockMessages() {
-    // Mock chat messages
-    final mockMessages = [
-      ChatMessage(
-        username: 'MovieFan23',
-        message: 'This movie is amazing! 🍿',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
-        userColor: Colors.blue,
-      ),
-      ChatMessage(
-        username: 'CinemaLover',
-        message: 'Just joined! What did I miss?',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 4)),
-        userColor: Colors.green,
-      ),
-      ChatMessage(
-        username: 'ActionFan88',
-        message: 'That scene was incredible!',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 3)),
-        userColor: Colors.orange,
-      ),
-      ChatMessage(
-        username: 'FilmCritic',
-        message: 'The cinematography is on point 🎬',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 2)),
-        userColor: Colors.purple,
-      ),
-      ChatMessage(
-        username: 'PopcornKing',
-        message: 'Who else is watching with friends?',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 1)),
-        userColor: Colors.red,
-      ),
-    ];
-
-    setState(() {
-      _messages.addAll(mockMessages);
-    });
-
-    // Auto-scroll to bottom
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-      }
-    });
+  @override
+  void didUpdateWidget(LiveChatWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.messages.length != widget.messages.length) {
+      _scrollToBottom();
+    }
   }
 
-  void _sendMessage() {
-    if (_messageController.text.trim().isEmpty) return;
-
-    setState(() {
-      _messages.add(
-        ChatMessage(
-          username: 'You',
-          message: _messageController.text,
-          timestamp: DateTime.now(),
-          userColor: Theme.of(context).colorScheme.primary,
-        ),
-      );
-    });
-
-    _messageController.clear();
-
-    // Auto-scroll to bottom
+  void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -99,6 +60,13 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
         );
       }
     });
+  }
+
+  void _sendMessage() {
+    if (_messageController.text.trim().isEmpty) return;
+
+    widget.onSendMessage(_messageController.text.trim());
+    _messageController.clear();
   }
 
   String _formatTime(DateTime timestamp) {
@@ -126,50 +94,114 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
           Container(
             padding: const EdgeInsets.all(16),
             color: Theme.of(context).colorScheme.surface,
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.chat_bubble_outline,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Live Chat',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.chat_bubble_outline,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Live Chat',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${_messages.length + 42}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
                       ),
-                    ],
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${widget.userCount}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                // Room ID with copy button
+                InkWell(
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: widget.roomId));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Room ID copied to clipboard!'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.badge_outlined,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            'Room: ${widget.roomId}',
+                            style: Theme.of(context).textTheme.labelMedium
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.content_copy,
+                          size: 14,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withOpacity(0.7),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -181,9 +213,9 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
+              itemCount: widget.messages.length,
               itemBuilder: (context, index) {
-                final message = _messages[index];
+                final message = widget.messages[index];
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),
@@ -246,6 +278,10 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
             ),
           ),
 
+          // Reaction buttons (if callback provided)
+          if (widget.onReactionTap != null)
+            ReactionButtons(onReactionTap: widget.onReactionTap!),
+
           // Message input
           Container(
             height: 64,
@@ -266,7 +302,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                       filled: true,
                       fillColor: Theme.of(context).scaffoldBackgroundColor,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(

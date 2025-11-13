@@ -1,15 +1,20 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import '../models/post.dart';
 import '../models/post_detail.dart';
+import '../models/player_models.dart';
+import '../models/room.dart' as room_model;
 import '../widgets/advanced_video_player.dart';
-import '../widgets/reaction_buttons.dart';
 import '../widgets/live_chat_widget.dart';
 import '../widgets/animation_overlay.dart';
 import '../widgets/episode_selector.dart';
+import '../widgets/room_join_widget.dart';
 import '../services/api_service.dart';
+import '../services/socket_service.dart';
+import '../services/user_service.dart';
 
 class PlayerScreen extends StatefulWidget {
   final Post post;
@@ -23,6 +28,8 @@ class PlayerScreen extends StatefulWidget {
 class _PlayerScreenState extends State<PlayerScreen> {
   final GlobalKey<AnimationOverlayState> _animationKey = GlobalKey();
   final ApiService _apiService = ApiService();
+  final SocketService _socketService = SocketService();
+  final UserService _userService = UserService();
   bool _isFullscreen = false;
   bool _orientationInitialized = false;
   List<Season> _seasons = [];
@@ -35,12 +42,237 @@ class _PlayerScreenState extends State<PlayerScreen> {
   Player? _sharedPlayer;
   VideoController? _sharedVideoController;
 
+  // Room state
+  bool _isInRoom = false;
+  String? _roomId;
+  String? _username;
+  List<ChatMessage> _chatMessages = [];
+  List<room_model.RoomUser> _roomUsers = [];
+  bool _isHost = false;
+  Timer? _syncTimer;
+  bool _isSyncing = false; // Prevent recursive sync
+
   @override
   void initState() {
     super.initState();
     _sharedPlayer = Player();
     _sharedVideoController = VideoController(_sharedPlayer!);
     _loadPostDetails();
+    _setupSocketConnection();
+  }
+
+  void _setupSocketConnection() {
+    // Connect to socket server
+    _socketService.connect('http://localhost:3000');
+
+    // Listen for room events
+    _socketService.onRoomCreated = (room) {
+      setState(() {
+        _isInRoom = true;
+        _roomId = room.id;
+        _roomUsers = room.users;
+        _isHost = _socketService.isHost;
+      });
+
+      // Start periodic sync if host
+      if (_isHost) {
+        _startPeriodicSync();
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Room created: ${room.id}')));
+    };
+
+    _socketService.onRoomData = (room) {
+      if (room != null) {
+        setState(() {
+          _isInRoom = true;
+          _roomId = room.id;
+          _roomUsers = room.users;
+          _isHost = _socketService.isHost;
+        });
+
+        // Start periodic sync if host
+        if (_isHost && _syncTimer == null) {
+          _startPeriodicSync();
+        }
+      }
+    };
+
+    _socketService.onUserJoined = (user, users) {
+      setState(() {
+        _roomUsers = users;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('$user joined the room')));
+    };
+
+    _socketService.onChatMessage = (message) {
+      setState(() {
+        _chatMessages.add(
+          ChatMessage(
+            username: message.username,
+            message: message.message,
+            timestamp: message.timestamp,
+            userColor: _getUserColor(message.username),
+          ),
+        );
+      });
+    };
+
+    // Listen for playback sync events
+    _socketService.onSyncPlayback = (currentTime, isPlaying, timestamp) {
+      if (!_isHost && !_isSyncing) {
+        _handleRemoteSync(currentTime, isPlaying, timestamp);
+      }
+    };
+
+    // Listen for playback control events
+    _socketService.onPlaybackControl = (action, currentTime, timestamp) {
+      if (!_isHost && !_isSyncing) {
+        _handleRemotePlaybackControl(action, currentTime, timestamp);
+      }
+    };
+  }
+
+  void _startPeriodicSync() {
+    _syncTimer?.cancel();
+    _syncTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (_isHost && _roomId != null && _sharedPlayer != null) {
+        final position = _sharedPlayer!.state.position.inMilliseconds / 1000.0;
+        final isPlaying = _sharedPlayer!.state.playing;
+        _socketService.syncPlayback(
+          roomId: _roomId!,
+          currentTime: position,
+          isPlaying: isPlaying,
+        );
+      }
+    });
+  }
+
+  void _handleRemoteSync(double currentTime, bool isPlaying, int timestamp) {
+    if (_sharedPlayer == null || _isSyncing) return;
+
+    _isSyncing = true;
+
+    // Calculate latency compensation
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final latency = (now - timestamp) / 1000.0; // Convert to seconds
+
+    // Seek to position + latency compensation
+    final targetTime = currentTime + latency;
+    _sharedPlayer!.seek(Duration(milliseconds: (targetTime * 1000).round()));
+
+    if (isPlaying && !_sharedPlayer!.state.playing) {
+      _sharedPlayer!.play();
+    } else if (!isPlaying && _sharedPlayer!.state.playing) {
+      _sharedPlayer!.pause();
+    }
+
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _isSyncing = false;
+    });
+  }
+
+  void _handleRemotePlaybackControl(
+    String action,
+    double currentTime,
+    int timestamp,
+  ) {
+    if (_sharedPlayer == null || _isSyncing) return;
+
+    _isSyncing = true;
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final latency = (now - timestamp) / 1000.0;
+    final targetTime = currentTime + latency;
+
+    switch (action) {
+      case 'play':
+        _sharedPlayer!.seek(
+          Duration(milliseconds: (targetTime * 1000).round()),
+        );
+        _sharedPlayer!.play();
+        break;
+      case 'pause':
+        _sharedPlayer!.pause();
+        _sharedPlayer!.seek(
+          Duration(milliseconds: (currentTime * 1000).round()),
+        );
+        break;
+      case 'seek':
+        _sharedPlayer!.seek(
+          Duration(milliseconds: (currentTime * 1000).round()),
+        );
+        break;
+    }
+
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _isSyncing = false;
+    });
+  }
+
+  Color _getUserColor(String username) {
+    // Generate consistent color for each user
+    final colors = [
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.purple,
+      Colors.red,
+      Colors.teal,
+      Colors.pink,
+      Colors.indigo,
+    ];
+    final hash = username.hashCode;
+    return colors[hash.abs() % colors.length];
+  }
+
+  void _handleCreateRoom() {
+    final username = _userService.uniqueUsername;
+    setState(() {
+      _username = username;
+    });
+    _socketService.createRoom(
+      user: username,
+      currentVideoUrl: _currentVideoUrl,
+      playlist: [],
+    );
+  }
+
+  void _handleJoinRoom(String roomId) {
+    final username = _userService.uniqueUsername;
+    setState(() {
+      _username = username;
+      _roomId = roomId;
+    });
+    _socketService.joinRoom(roomId: roomId, user: username);
+  }
+
+  void _handleSendMessage(String message) {
+    if (_roomId == null || _username == null) return;
+
+    final chatMessage = room_model.ChatMessage(
+      username: _username!,
+      message: message,
+      timestamp: DateTime.now(),
+    );
+
+    _socketService.sendMessage(roomId: _roomId!, message: chatMessage);
+
+    // Add to local messages immediately
+    setState(() {
+      _chatMessages.add(
+        ChatMessage(
+          username: _username!,
+          message: message,
+          timestamp: DateTime.now(),
+          userColor: Theme.of(context).colorScheme.primary,
+        ),
+      );
+    });
   }
 
   Future<void> _loadPostDetails() async {
@@ -129,7 +361,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   @override
   void dispose() {
+    _syncTimer?.cancel();
     _sharedPlayer?.dispose();
+    _socketService.disconnect();
     // Reset orientation when leaving
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -282,18 +516,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 if (isTabletOrDesktop && isLandscape) {
                   return Row(
                     children: [
-                      // Left side - Video player with reactions
-                      Expanded(
-                        flex: 7,
-                        child: Column(
-                          children: [
-                            // Video player
-                            Expanded(child: _buildVideoPlayer()),
-                            // Reaction buttons
-                            ReactionButtons(onReactionTap: _handleReaction),
-                          ],
-                        ),
-                      ),
+                      // Left side - Video player only
+                      Expanded(flex: 7, child: _buildVideoPlayer()),
                       // Right side - Chat and Episodes in tabs
                       SizedBox(
                         width: 400,
@@ -325,7 +549,19 @@ class _PlayerScreenState extends State<PlayerScreen> {
                               Expanded(
                                 child: TabBarView(
                                   children: [
-                                    const LiveChatWidget(),
+                                    _isInRoom
+                                        ? LiveChatWidget(
+                                            onReactionTap: _handleReaction,
+                                            messages: _chatMessages,
+                                            username: _username ?? '',
+                                            roomId: _roomId ?? '',
+                                            onSendMessage: _handleSendMessage,
+                                            userCount: _roomUsers.length,
+                                          )
+                                        : RoomJoinWidget(
+                                            onJoinRoom: _handleJoinRoom,
+                                            onCreateRoom: _handleCreateRoom,
+                                          ),
                                     EpisodeSelector(
                                       seasons: _seasons,
                                       currentSeasonIndex: _currentSeasonIndex,
@@ -351,8 +587,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       aspectRatio: 16 / 9,
                       child: _buildVideoPlayer(),
                     ),
-                    // Reaction buttons
-                    ReactionButtons(onReactionTap: _handleReaction),
                     // Chat and Episodes in tabs
                     Expanded(
                       child: DefaultTabController(
@@ -381,7 +615,19 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             Expanded(
                               child: TabBarView(
                                 children: [
-                                  const LiveChatWidget(),
+                                  _isInRoom
+                                      ? LiveChatWidget(
+                                          onReactionTap: _handleReaction,
+                                          messages: _chatMessages,
+                                          username: _username ?? '',
+                                          roomId: _roomId ?? '',
+                                          onSendMessage: _handleSendMessage,
+                                          userCount: _roomUsers.length,
+                                        )
+                                      : RoomJoinWidget(
+                                          onJoinRoom: _handleJoinRoom,
+                                          onCreateRoom: _handleCreateRoom,
+                                        ),
                                   EpisodeSelector(
                                     seasons: _seasons,
                                     currentSeasonIndex: _currentSeasonIndex,

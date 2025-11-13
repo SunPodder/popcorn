@@ -111,7 +111,7 @@ class _EpisodeSelectorState extends State<EpisodeSelector> {
                     ),
                     decoration: BoxDecoration(
                       color: Theme.of(context).scaffoldBackgroundColor,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: Theme.of(
                           context,

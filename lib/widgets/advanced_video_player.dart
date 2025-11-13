@@ -50,10 +50,8 @@ class _AdvancedVideoPlayerState extends State<AdvancedVideoPlayer> {
     _player = widget.sharedPlayer ?? Player();
     _videoController = widget.sharedVideoController ?? VideoController(_player);
 
-    // In fullscreen, hide controls by default
-    if (widget.isFullscreen) {
-      _showControls = false;
-    }
+    // Start with controls visible, then hide after initial delay
+    _showControlsTemporarily();
   }
 
   void _initializeVideo() {
@@ -95,11 +93,6 @@ class _AdvancedVideoPlayerState extends State<AdvancedVideoPlayer> {
     if (oldWidget.videoUrl != widget.videoUrl) {
       _loadVideo();
     }
-
-    // Update controls visibility based on fullscreen state
-    if (oldWidget.isFullscreen != widget.isFullscreen && widget.isFullscreen) {
-      setState(() => _showControls = false);
-    }
   }
 
   @override
@@ -115,23 +108,19 @@ class _AdvancedVideoPlayerState extends State<AdvancedVideoPlayer> {
   void _togglePlayPause() {
     _player.playOrPause();
     // Show controls temporarily when tapping video
-    if (widget.isFullscreen) {
-      _showControlsTemporarily();
-    }
+    _showControlsTemporarily();
   }
 
   void _showControlsTemporarily() {
     setState(() => _showControls = true);
 
-    // Auto-hide controls after 3 seconds in fullscreen
-    if (widget.isFullscreen) {
-      _hideControlsTimer?.cancel();
-      _hideControlsTimer = Timer(const Duration(seconds: 3), () {
-        if (mounted && _player.state.playing) {
-          setState(() => _showControls = false);
-        }
-      });
-    }
+    // Auto-hide controls after 3 seconds
+    _hideControlsTimer?.cancel();
+    _hideControlsTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() => _showControls = false);
+      }
+    });
   }
 
   void _handleSpeedMenu() {
@@ -212,9 +201,8 @@ class _AdvancedVideoPlayerState extends State<AdvancedVideoPlayer> {
   Widget _buildPlayer() {
     return MouseRegion(
       onHover: (_) {
-        if (widget.isFullscreen) {
-          _showControlsTemporarily();
-        }
+        // Show controls on mouse movement (both fullscreen and normal)
+        _showControlsTemporarily();
       },
       child: Container(
         color: Colors.black,

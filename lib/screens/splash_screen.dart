@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:async';
 import 'home_screen.dart';
+import 'nickname_setup_screen.dart';
+import '../services/user_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -19,13 +21,19 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _initializeApp() async {
     // Simulate background initialization work
-    // This is where you'll add IO operations later
     await Future.delayed(const Duration(seconds: 3));
 
-    // Navigate to home screen after initialization
+    // Check if user has set nickname
+    final userService = UserService();
+    final hasNickname = userService.hasNickname;
+
+    // Navigate to appropriate screen
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(
+          builder: (context) =>
+              hasNickname ? const HomeScreen() : const NicknameSetupScreen(),
+        ),
       );
     }
   }
