@@ -22,7 +22,8 @@ app.get("/api/health", (c) => {
 const server = serve(
 	{
 		fetch: app.fetch,
-		port: 3000,
+		port: 6969,
+		hostname: "0.0.0.0",
 	},
 	(info) => {
 		console.log(`Server is running: http://${info.address}:${info.port}`);
