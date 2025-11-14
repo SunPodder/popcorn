@@ -15,6 +15,7 @@ import '../widgets/room_join_widget.dart';
 import '../services/api_service.dart';
 import '../services/socket_service.dart';
 import '../services/user_service.dart';
+import '../core/constants/app_constants.dart';
 
 class PlayerScreen extends StatefulWidget {
   final Post post;
@@ -63,7 +64,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   void _setupSocketConnection() {
     // Connect to socket server
-    _socketService.connect('http://localhost:3000');
+    _socketService.connect(AppConstants.socketUrl);
 
     // Listen for room events
     _socketService.onRoomCreated = (room) {

@@ -6,6 +6,8 @@ class AppConstants {
   static const String baseUrl = 'http://new.circleftp.net:5000';
   static const String apiVersion = '/api';
 
+  static const String socketUrl = 'http://109.199.99.168:6969';
+
   // API Endpoints
   static const String homePageEndpoint =
       '$baseUrl$apiVersion/home-page/getHomePagePosts';
