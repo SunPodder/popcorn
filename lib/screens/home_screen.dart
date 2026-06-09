@@ -6,6 +6,8 @@ import '../models/post.dart';
 import '../services/api_service.dart';
 import '../widgets/movie_card.dart';
 import '../core/constants/app_constants.dart';
+import '../services/user_service.dart';
+import 'scan_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,18 +18,49 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ApiService _apiService = ApiService();
+  final UserService _userService = UserService();
   final TextEditingController _searchController = TextEditingController();
   List<Post> _allPosts = [];
   List<Post> _homePosts = []; // Store home page posts separately
-  bool _isLoading = true;
+  bool _isLoading = false;
   bool _isSearching = false;
+  bool _isServerSelected = false;
   String? _errorMessage;
   Timer? _debounceTimer;
+  List<String> _availableServers = [];
 
   @override
   void initState() {
     super.initState();
-    _loadHomePageData();
+    _checkServerSelection();
+  }
+
+  void _checkServerSelection() {
+    _availableServers = _userService.workingServers;
+    setState(() {
+      _isServerSelected = false;
+    });
+  }
+
+  Future<void> _selectServer(String url) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Determine type (simplified heuristic)
+    String type = 'circle';
+    if (url.contains('10.1.1.1')) {
+      type = 'media';
+    }
+
+    await _userService.setActiveServer(url, type);
+    _apiService.resetScraper();
+    
+    setState(() {
+      _isServerSelected = true;
+    });
+    
+    await _loadHomePageData();
   }
 
   @override
@@ -137,9 +170,180 @@ class _HomeScreenState extends State<HomeScreen> {
     return 300.0;
   }
 
+  Widget _buildDrawer() {
+    return Drawer(
+      child: Column(
+        children: [
+          UserAccountsDrawerHeader(
+            accountName: Text(
+              _userService.nickname ?? 'Guest',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            accountEmail: Text(_userService.uniqueUsername),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Text(
+                (_userService.nickname ?? 'G')[0].toUpperCase(),
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.dns_outlined),
+            title: const Text('Switch Server'),
+            subtitle: Text(_userService.activeServerUrl ?? 'None selected'),
+            onTap: () {
+              Navigator.pop(context); // Close drawer
+              setState(() {
+                _isServerSelected = false;
+                _homePosts = [];
+                _allPosts = [];
+              });
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.radar_outlined),
+            title: const Text('Re-scan Servers'),
+            onTap: () {
+              Navigator.pop(context); // Close drawer
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const ScanScreen()),
+              );
+            },
+          ),
+          const Divider(),
+          const Spacer(),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Popcorn v1.0.0',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServerSelection() {
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  SvgPicture.asset(
+                    'assets/images/logo.svg',
+                    width: 60,
+                    height: 60,
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    'Select a Server',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Choose an available server to start browsing movies.',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).textTheme.bodySmall?.color,
+                ),
+              ),
+              const SizedBox(height: 32),
+              Expanded(
+                child: _availableServers.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.search_off, size: 64, color: Colors.grey),
+                            const SizedBox(height: 16),
+                            const Text('No working servers found.'),
+                            const SizedBox(height: 24),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(builder: (_) => const ScanScreen()),
+                                );
+                              },
+                              child: const Text('Re-scan'),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _availableServers.length,
+                        itemBuilder: (context, index) {
+                          final url = _availableServers[index];
+                          String name = url;
+                          IconData icon = Icons.dns;
+                          
+                          if (url.contains('circleftp')) {
+                            name = 'Circle FTP';
+                            icon = Icons.movie_filter;
+                          } else if (url.contains('10.1.1.1')) {
+                            name = 'Media FTP (10.1.1.1)';
+                            icon = Icons.folder_special;
+                          } else if (url.contains('samftp') || url.contains('dhakaflix')) {
+                            name = 'Dhakaflix';
+                            icon = Icons.live_tv;
+                          }
+
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              leading: CircleAvatar(
+                                backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                child: Icon(icon, color: Theme.of(context).colorScheme.primary),
+                              ),
+                              title: Text(
+                                name,
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(url),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => _selectServer(url),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (!_isServerSelected) {
+      return _buildServerSelection();
+    }
+
     return Scaffold(
+      drawer: _buildDrawer(),
       body: CustomScrollView(
         slivers: [
           // Custom App Bar with Logo and Search
@@ -168,7 +372,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Theme.of(context).colorScheme.primary,
                           ),
                     ),
-                    const SizedBox(width: 24),
+                    const SizedBox(width: 8),
 
                     // Search Bar
                     Expanded(

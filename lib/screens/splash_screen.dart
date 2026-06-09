@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:async';
 import 'home_screen.dart';
 import 'nickname_setup_screen.dart';
+import 'scan_screen.dart';
 import '../services/user_service.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -23,17 +24,24 @@ class _SplashScreenState extends State<SplashScreen> {
     // Simulate background initialization work
     await Future.delayed(const Duration(seconds: 3));
 
-    // Check if user has set nickname
+    // Check if user has set nickname and completed scan
     final userService = UserService();
     final hasNickname = userService.hasNickname;
+    final hasScanned = userService.hasScanned;
 
     // Navigate to appropriate screen
     if (mounted) {
+      Widget nextScreen;
+      if (!hasNickname) {
+        nextScreen = const NicknameSetupScreen();
+      } else if (!hasScanned) {
+        nextScreen = const ScanScreen();
+      } else {
+        nextScreen = const HomeScreen();
+      }
+
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) =>
-              hasNickname ? const HomeScreen() : const NicknameSetupScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => nextScreen),
       );
     }
   }

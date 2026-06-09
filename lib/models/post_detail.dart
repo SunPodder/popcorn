@@ -1,5 +1,5 @@
 class PostDetail {
-  final int id;
+  final String id;
   final String? title;
   final String type;
   final String? image;
@@ -53,7 +53,7 @@ class PostDetail {
 
   factory PostDetail.fromJson(Map<String, dynamic> json) {
     return PostDetail(
-      id: json['id'] as int,
+      id: json['id'].toString(),
       title: json['title'] as String?,
       type: json['type'] as String? ?? 'movie',
       image: json['image'] as String?,
@@ -68,8 +68,8 @@ class PostDetail {
       watchTime: json['watchTime'] as String?,
       year: json['year'] as String?,
       userId: json['userId'] as int? ?? 0,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'] as String) : DateTime.now(),
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt'] as String) : DateTime.now(),
     );
   }
 }

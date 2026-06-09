@@ -363,8 +363,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
   @override
   void dispose() {
     _syncTimer?.cancel();
-    _sharedPlayer?.dispose();
     _socketService.disconnect();
+    
+    // Dispose player and controller first to stop native callbacks
+    _sharedPlayer?.dispose();
+    
     // Reset orientation when leaving
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -422,23 +425,29 @@ class _PlayerScreenState extends State<PlayerScreen> {
     if (_error != null) {
       return Container(
         color: Colors.black,
+        padding: const EdgeInsets.all(16),
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white, size: 48),
-              const SizedBox(height: 16),
-              Text(
-                _error!,
-                style: const TextStyle(color: Colors.white),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _loadPostDetails,
-                child: const Text('Retry'),
-              ),
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  _error!,
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _loadPostDetails,
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -476,7 +485,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     return Scaffold(
       body: SafeArea(
         top: false,
-        bottom: false,
+        bottom: true,
         child: Stack(
           children: [
             OrientationBuilder(

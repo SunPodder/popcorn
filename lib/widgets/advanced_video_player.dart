@@ -150,26 +150,40 @@ class _AdvancedVideoPlayerState extends State<AdvancedVideoPlayer> {
   Widget _buildErrorView() {
     return Container(
       color: Colors.black,
+      padding: const EdgeInsets.all(16),
       child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              color: Theme.of(context).colorScheme.error,
-              size: 64,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _error!,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: Colors.white),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadVideo, child: const Text('Retry')),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.error_outline,
+                color: Theme.of(context).colorScheme.error,
+                size: 48,
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: Text(
+                  _error!,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.white),
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadVideo,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                ),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -181,6 +195,7 @@ class _AdvancedVideoPlayerState extends State<AdvancedVideoPlayer> {
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             CircularProgressIndicator(
               color: Theme.of(context).colorScheme.primary,
@@ -190,7 +205,7 @@ class _AdvancedVideoPlayerState extends State<AdvancedVideoPlayer> {
               'Loading video...',
               style: Theme.of(
                 context,
-              ).textTheme.bodyLarge?.copyWith(color: Colors.white),
+              ).textTheme.bodyMedium?.copyWith(color: Colors.white),
             ),
           ],
         ),

@@ -1,9 +1,11 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../models/home_page_response.dart';
 import '../models/search_response.dart';
 import '../models/post_detail.dart';
 import '../core/constants/app_constants.dart';
+import 'scrapers/base_scraper.dart';
+import 'scrapers/circle_ftp_scraper.dart';
+import 'scrapers/media_ftp_scraper.dart';
+import 'user_service.dart';
 
 class ApiService {
   // Singleton pattern
@@ -11,61 +13,53 @@ class ApiService {
   factory ApiService() => _instance;
   ApiService._internal();
 
-  Future<HomePageResponse> getHomePagePosts() async {
-    try {
-      final response = await http.get(
-        Uri.parse(AppConstants.homePageEndpoint),
-        headers: {'Content-Type': 'application/json'},
-      );
+  BaseScraper? _activeScraper;
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonData = json.decode(response.body);
-        return HomePageResponse.fromJson(jsonData);
-      } else {
-        throw Exception(
-          'Failed to load home page posts: ${response.statusCode}',
-        );
-      }
+  void resetScraper() {
+    _activeScraper = null;
+  }
+
+  Future<void> _ensureScraper() async {
+    if (_activeScraper != null) return;
+
+    final userService = UserService();
+    final url = userService.activeServerUrl ?? AppConstants.baseUrl;
+    final type = userService.activeServerType ?? 'circle';
+
+    if (type == 'media') {
+      _activeScraper = MediaFtpScraper(url);
+    } else {
+      _activeScraper = CircleFtpScraper(url);
+    }
+  }
+
+  Future<HomePageResponse> getHomePagePosts() async {
+    await _ensureScraper();
+    try {
+      final posts = await _activeScraper!.getHomePosts();
+      return HomePageResponse(
+        mostVisitedPosts: posts.take(10).toList(),
+        categoryPosts: [], // Simplified for now
+      );
     } catch (e) {
       throw Exception('Error fetching home page posts: $e');
     }
   }
 
   Future<SearchResponse> searchPosts(String query) async {
+    await _ensureScraper();
     try {
-      final uri = Uri.parse(
-        AppConstants.searchEndpoint,
-      ).replace(queryParameters: {'searchTerm': query, 'order': 'desc'});
-
-      final response = await http.get(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonData = json.decode(response.body);
-        return SearchResponse.fromJson(jsonData);
-      } else {
-        throw Exception('Failed to search posts: ${response.statusCode}');
-      }
+      final posts = await _activeScraper!.searchPosts(query);
+      return SearchResponse(posts: posts);
     } catch (e) {
       throw Exception('Error searching posts: $e');
     }
   }
 
-  Future<PostDetail> getPostDetail(int postId) async {
+  Future<PostDetail> getPostDetail(String postId) async {
+    await _ensureScraper();
     try {
-      final response = await http.get(
-        Uri.parse('${AppConstants.searchEndpoint}/$postId'),
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonData = json.decode(response.body);
-        return PostDetail.fromJson(jsonData);
-      } else {
-        throw Exception('Failed to load post detail: ${response.statusCode}');
-      }
+      return await _activeScraper!.getPostDetail(postId);
     } catch (e) {
       throw Exception('Error fetching post detail: $e');
     }

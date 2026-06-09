@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/user_service.dart';
-import 'home_screen.dart';
+import 'scan_screen.dart';
 
 class NicknameSetupScreen extends StatefulWidget {
   const NicknameSetupScreen({super.key});
@@ -37,7 +37,7 @@ class _NicknameSetupScreenState extends State<NicknameSetupScreen> {
     if (mounted) {
       Navigator.of(
         context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const ScanScreen()));
     }
   }
 

@@ -1,5 +1,5 @@
 class Post {
-  final int id;
+  final String id;
   final String name;
   final String? title;
   final String image;
@@ -25,7 +25,7 @@ class Post {
 
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
-      id: json['id'] as int,
+      id: json['id'].toString(),
       name: json['name'] as String? ?? '',
       title: json['title'] as String?,
       image: json['image'] as String? ?? '',
